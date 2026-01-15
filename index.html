@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMI Calculator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide-react"></script>
+</head>
+<body class="bg-slate-50">
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function App() {
+            const [calcData, setCalcData] = useState({
+                price: '', discount: '0', downPayment: '', interestRate: '2', tenure: '12', fileCharge: '0'
+            });
+
+            const handleInput = (e) => {
+                const { name, value } = e.target;
+                setCalcData(prev => ({ ...prev, [name]: value }));
+            };
+
+            const calculate = () => {
+                const p = parseFloat(calcData.price) || 0;
+                const d = parseFloat(calcData.discount) || 0;
+                const dp = parseFloat(calcData.downPayment) || 0;
+                const ir = parseFloat(calcData.interestRate) || 0;
+                const t = parseFloat(calcData.tenure) || 1;
+                const fc = parseFloat(calcData.fileCharge) || 0;
+                const netPrice = p - d;
+                const loan = netPrice - dp;
+                const interest = loan > 0 ? (loan * (ir / 100) * t) : 0;
+                const emi = loan > 0 ? Math.round((loan + interest) / t) : 0;
+                const upfront = dp + fc;
+                return { emi, loan, upfront, totalCost: (emi * t) + upfront };
+            };
+
+            const res = calculate();
+
+            return (
+                <div className="min-h-screen flex flex-col items-center justify-center p-4">
+                    <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-md border border-slate-200">
+                        <h1 className="text-2xl font-black text-indigo-600 mb-6 text-center uppercase italic">EMI Calculator</h1>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="text-[10px] font-bold text-slate-500 uppercase">Item Price</label>
+                                <input name="price" type="number" value={calcData.price} onChange={handleInput} className="w-full p-3 bg-slate-100 rounded-xl outline-none font-bold" placeholder="0" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase">Down Payment</label>
+                                    <input name="downPayment" type="number" value={calcData.downPayment} onChange={handleInput} className="w-full p-3 bg-slate-100 rounded-xl outline-none font-bold" />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase">Tenure (Months)</label>
+                                    <select name="tenure" value={calcData.tenure} onChange={handleInput} className="w-full p-3 bg-slate-100 rounded-xl outline-none font-bold">
+                                        <option value="6">6 Months</option>
+                                        <option value="12">12 Months</option>
+                                        <option value="24">24 Months</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="mt-8 p-6 bg-indigo-600 rounded-2xl text-white text-center">
+                                <p className="text-[10px] font-bold uppercase opacity-80">Monthly EMI</p>
+                                <h2 className="text-4xl font-black italic">₹{res.emi.toLocaleString()}</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
