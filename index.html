@@ -3,14 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EMI Calculator</title>
+    <title>Mobile Finance App - EMI Calculator</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <div class="bg-white p-8 rounded-lg shadow-md w-96 text-center">
-        <h1 class="text-2xl font-bold mb-4">EMI Calculator Live!</h1>
-        <p>Aapka calculator ab live hone ke liye taiyaar hai.</p>
-        <button onclick="alert('Calculator working!')" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">Check Now</button>
-    </div>
+<body style="font-family: 'Inter', sans-serif;">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // Helper Component for Lucide Icons in Browser
+        const Icon = ({ name, size = 16, className = "" }) => {
+            const [iconHtml, setIconHtml] = useState("");
+            React.useEffect(() => {
+                const svg = lucide.createIcons({
+                    icons: { [name]: lucide[name] }
+                });
+                // This is a simplified way to render lucide in static html
+            }, []);
+            // Using a simpler approach for icons in this demo
+            return <i data-lucide={name} style={{width: size, height: size}} className={className}></i>;
+        };
+
+        const MobileFinanceApp = () => {
+            const [calcData, setCalcData] = useState({
+                price: '',
+                discount: '0',
+                downPayment: '',
+                interestRate: '2',
+                tenure: '12',
+                fileCharge: '0'
+            });
+
+            const handleInput = (e) => {
+                const { name, value } = e.target;
+                setCalcData(prev => ({ ...prev, [name]: value }));
+            };
+
+            const calculate = () => {
+                const p = parseFloat(calcData.price) || 0;
+                const d = parseFloat(calcData.discount) || 0;
+                const dp = parseFloat(calcData.downPayment) || 0;
+                const ir = parseFloat(calcData.interestRate) || 0;
+                const t = parseFloat(calcData.tenure) || 1;
+                const fc = parseFloat(calcData.fileCharge) || 0;
+
+                const netPrice = p - d;
+                const loan = netPrice - dp;
+                const interest = loan > 0 ? (loan * (ir / 100) * t) : 0;
+                const emi = loan > 0 ? Math.round((loan + interest) / t) : 0;
+                const upfront = dp + fc;
+                const totalCost = (emi * t) + upfront;
+                const extraCharge = (totalCost - netPrice);
+                
+                return { emi, loan, upfront, totalCost, extraCharge, dp, fc };
+            };
+
+            const res = calculate();
+            const fmt = (v) => "₹" + Number(v).toLocaleString('en-IN');
+
+            React.useEffect(() => {
+                lucide.createIcons();
+            }, [calcData]);
+
+            return (
+                <div className="h-screen w-full bg-slate-50 flex flex-col overflow-hidden text-slate-900">
+                    <header className="bg-white border-b border-slate-200 px-5 py-2 flex justify-between items-center shrink-0 z-30 shadow-sm">
+                        <div className="flex items-center gap-2">
+                            <div className="bg-indigo-600 p-1.5 rounded-lg shadow-sm">
+                                <i data-lucide="smartphone" className="text-white w-4 h-4"></i>
+                            </div>
+                            <h1 className="text-sm font-black tracking-tighter uppercase text-slate-800 italic">
+                                EMI <span className="text-indigo-600">CALCULATOR</span>
+                            </h1>
+                        </div>
+                        <div className="flex gap-4 items-center">
+                            <button 
+                                onClick={() => setCalcData({price: '', discount: '0', downPayment: '', interestRate: '2', tenure: '12', fileCharge: '0'})}
+                                className="flex items-center gap-1 text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-rose-500 transition-colors"
+                            >
+                                <i data-lucide="refresh-ccw" className="w-2.5 h-2.5"></i> RESET
+                            </button>
+                        </div>
+                    </header>
+
+                    <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
+                        <aside className="w-full md:w-[280px] bg-[#EBF5FF] border-r border-blue-100 p-4 flex flex-col gap-4 shrink-0 overflow-y-auto">
+                            <h2 className="text-[9px] font-black text-blue-700 uppercase tracking-[0.2em]">Settings</h2>
+                            <div className="space-y-4">
+                                <div className="bg-white p-3 rounded-2xl border border-blue-200 shadow-sm">
+                                    <label className="text-[8px] font-black text-blue-700 uppercase block mb-1">Item Price</label>
+                                    <input name="price" type="number" value={calcData.price} onChange={handleInput} placeholder="0" className="w-full bg-transparent text-xl font-black outline-none text-slate-800" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-white p-3 rounded-2xl border border-blue-200 shadow-sm">
+                                        <label className="text-[8px] font-black text-blue-700 uppercase block mb-1">Discount</label>
+                                        <input name="discount" type="number" value={calcData.discount} onChange={handleInput} className="w-full bg-transparent text-sm font-bold outline-none" />
+                                    </div>
+                                    <div className="bg-white p-3 rounded-2xl border border-blue-200 shadow-sm">
+                                        <label className="text-[8px] font-black text-blue-700 uppercase block mb-1">Down Pay</label>
+                                        <input name="downPayment" type="number" value={calcData.downPayment} onChange={handleInput} className="w-full bg-transparent text-sm font-bold outline-none" />
+                                    </div>
+                                </div>
+                                <div className="bg-blue-600 p-3 rounded-2xl">
+                                    <label className="text-[8px] font-black text-white uppercase block mb-2">Tenure</label>
+                                    <select name="tenure" value={calcData.tenure} onChange={handleInput} className="w-full bg-blue-700 border-none py-2 px-3 rounded-xl text-xs font-black text-white outline-none">
+                                        <option value="6">6 Months</option>
+                                        <option value="12">12 Months</option>
+                                        <option value="24">24 Months</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </aside>
+
+                        <section className="flex-1 bg-slate-50 p-4 md:p-6 flex flex-col justify-center overflow-hidden">
+                            <div className="max-w-3xl mx-auto w-full space-y-3">
+                                <div className="bg-gradient-to-br from-slate-800 to-slate-950 p-8 rounded-[2rem] text-white shadow-2xl">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Monthly EMI</p>
+                                    <div className="text-6xl font-black tracking-tighter">{fmt(res.emi)}</div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div className="bg-emerald-500 p-4 rounded-2xl text-white">
+                                        <p className="text-[8px] font-black uppercase opacity-80 mb-1">Cash Upfront</p>
+                                        <h3 className="text-xl font-black">{fmt(res.upfront)}</h3>
+                                    </div>
+                                    <div className="bg-blue-500 p-4 rounded-2xl text-white">
+                                        <p className="text-[8px] font-black uppercase opacity-80 mb-1">Loan Amount</p>
+                                        <h3 className="text-xl font-black">{fmt(res.loan)}</h3>
+                                    </div>
+                                    <div className="bg-rose-600 p-4 rounded-2xl text-white">
+                                        <p className="text-[8px] font-black uppercase opacity-80 mb-1">Extra Cost</p>
+                                        <h3 className="text-xl font-black">{fmt(res.extraCharge)}</h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </main>
+                    <style>{`
+                        input::-webkit-inner-spin-button { -webkit-appearance: none; }
+                        @media (max-width: 767px) { .h-screen { height: auto; } }
+                    `}</style>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<MobileFinanceApp />);
+    </script>
 </body>
 </html>
